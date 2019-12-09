@@ -63,12 +63,3 @@ restoreProgramAlarmState (Halt prog) = Run $ take 1 prog ++ [12, 2] ++ drop 3 pr
 
 output = runProgram . restoreProgramAlarmState <$> readProgramFromFile "data/day2.txt"
 
--- 10566835
-
-
-
-
-
-
-
-
