@@ -3,7 +3,9 @@ module Day2 where
 import qualified Data.Text                     as T
 import qualified Data.Text.IO                  as TIO
 import           Data.List.Split                ( chunksOf )
-import           System.IO                      ( FilePath, openFile )
+import           System.IO                      ( FilePath
+                                                , openFile
+                                                )
 
 
 data Program = Run [Int] | Halt [Int] deriving (Show, Eq)
@@ -58,8 +60,11 @@ runProgram prog          = go 0 prog where
   go n run@( Run  _) = go (n + 1) $ executeInstruction n run
 
 restoreProgramAlarmState :: Program -> Program
-restoreProgramAlarmState (Run prog) = Run $ take 1 prog ++ [12, 2] ++ drop 3 prog
-restoreProgramAlarmState (Halt prog) = Run $ take 1 prog ++ [12, 2] ++ drop 3 prog
+restoreProgramAlarmState (Run prog) =
+  Run $ take 1 prog ++ [12, 2] ++ drop 3 prog
+restoreProgramAlarmState (Halt prog) =
+  Run $ take 1 prog ++ [12, 2] ++ drop 3 prog
 
-output = runProgram . restoreProgramAlarmState <$> readProgramFromFile "data/day2.txt"
+output =
+  runProgram . restoreProgramAlarmState <$> readProgramFromFile "data/day2.txt"
 
