@@ -8,25 +8,30 @@ import           System.IO                      ( FilePath
                                                 )
 
 
-data Program = Run [Int] | Halt [Int] deriving (Show, Eq)
+data ExecStatus = Run | Halt deriving (Eq, Show)
+
+data Program =
+  Program {pLength :: Int, pContents :: [Int], pExecStatus :: ExecStatus} deriving (Show, Eq)
 
 everyNth :: Int -> [a] -> [a]
-everyNth n xs = case drop (n-1) xs of
-                  (y:ys) -> y : everyNth n ys
-                  [] -> []
+everyNth n xs = case drop (n - 1) xs of
+  (y : ys) -> y : everyNth n ys
+  []       -> []
 
 makeProgram :: [Int] -> Program
-makeProgram prog
-  | 99 `notElem` everyNth 4 (tail prog) = Halt prog  -- no end opcode
-  | otherwise = Run prog
-
-toInts :: Program -> [Int]
-toInts (Run  p) = p
-toInts (Halt p) = p
+makeProgram prog | 99 `notElem` opcodes = Program progLength prog Halt
+                 | otherwise            = Program progLength prog Run
+ where
+  opcodes    = everyNth 4 (tail prog)
+  progLength = length prog
 
 readProgramFromFile :: FilePath -> IO Program
 readProgramFromFile f =
-  Run . map (read . T.unpack) . T.splitOn (T.pack ",") . T.pack <$> readFile f
+  makeProgram
+    .   map (read . T.unpack)
+    .   T.splitOn (T.pack ",")
+    .   T.pack
+    <$> readFile f
 
 getOperation :: (Num a, Eq a) => Int -> (a -> a -> a)
 getOperation 1 = (+)
@@ -35,51 +40,53 @@ getOperation _ =
   error
     "Undefined operation. Valid operations are 1 (addition) and 2 (multiplication)"
 
--- TODO: instead of checking length here, add length field to program datatype
-readRegister :: Int -> [Int] -> Int
+-- -- TODO: instead of checking length here, add length field to program datatype
+readRegister :: Int -> Program -> Int
 readRegister n prog
-  | n >= length prog = error "Program is not long enough to read instruction."
-  | otherwise        = prog !! n
+  | n >= pLength prog = error "Program is not long enough to read instruction."
+  | otherwise         = pContents prog !! n
 
-readOperation :: Int -> [Int] -> Int
+readOperation :: Int -> Program -> Int
 readOperation n = readRegister (n * 4)
 
-readSrc1 :: Int -> [Int] -> Int
+readSrc1 :: Int -> Program -> Int
 readSrc1 n = readRegister (n * 4 + 1)
 
-readSrc2 :: Int -> [Int] -> Int
+readSrc2 :: Int -> Program -> Int
 readSrc2 n = readRegister (n * 4 + 2)
 
-readDest :: Int -> [Int] -> Int
+readDest :: Int -> Program -> Int
 readDest n = readRegister (n * 4 + 3)
 
-writeRegister :: Int -> Int -> [Int] -> [Int]
-writeRegister n result prog = take n prog ++ [result] ++ drop (n + 1) prog
+writeRegister :: Int -> Int -> Program -> Program
+writeRegister n result prog =
+  makeProgram $ take n progContents ++ [result] ++ drop (n + 1) progContents
+  where progContents = pContents prog
 
 executeInstruction :: Int -> Program -> Program
-executeInstruction _ halt@(Halt _) = halt
-executeInstruction n (Run prog)
-  | op == 99  = Halt prog
-  | otherwise = Run (writeRegister dest result prog)
+executeInstruction _ halt@(Program _ _ Halt) = halt
+executeInstruction n run@(Program len prog Run)
+  | op == 99  = Program len prog Halt
+  | otherwise = writeRegister dest result run
  where
-  op     = readOperation n prog
-  dest   = readDest n prog
+  op     = readOperation n run
+  dest   = readDest n run
   result = f arg1 arg2
-  f      = getOperation (readOperation n prog)
-  arg1   = readRegister (readSrc1 n prog) prog
-  arg2   = readRegister (readSrc2 n prog) prog
+  f      = getOperation (readOperation n run)
+  arg1   = readRegister (readSrc1 n run) run
+  arg2   = readRegister (readSrc2 n run) run
 
 runProgram :: Program -> Program
-runProgram halt@(Halt _) = halt
-runProgram prog          = go 0 prog where
+runProgram halt@(Program _ _ Halt) = halt
+runProgram prog                    = go 0 prog where
   go :: Int -> Program -> Program
-  go n halt@(Halt _) = halt
-  go n run@( Run  _) = go (n + 1) $ executeInstruction n run
+  go n halt@(Program _ _ Halt) = halt
+  go n run@( Program _ _ Run ) = go (n + 1) $ executeInstruction n run
 
 setNounAndVerb :: Int -> Int -> Program -> Program
-setNounAndVerb _ _ halt@(Halt prog) = halt
-setNounAndVerb noun verb (Run prog) =
-  Run $ take 1 prog ++ [noun, verb] ++ drop 3 prog
+setNounAndVerb _ _ halt@(Program _ _ Halt) = halt
+setNounAndVerb noun verb (Program _ prog Run) =
+  makeProgram $ take 1 prog ++ [noun, verb] ++ drop 3 prog
 
 partOneOutput =
   runProgram . setNounAndVerb 12 2 <$> readProgramFromFile "data/day2.txt"
@@ -91,8 +98,8 @@ data ProgramOutput = ProgramOutput
   } deriving Show
 
 runProgramForInputs :: Int -> Int -> Program -> ProgramOutput
-runProgramForInputs noun verb prog = ProgramOutput output noun verb where
-  output = readRegister 0 $ toInts $ runProgram (setNounAndVerb noun verb prog)
+runProgramForInputs noun verb prog = ProgramOutput output noun verb
+  where output = readRegister 0 $ runProgram (setNounAndVerb noun verb prog)
 
 findInputsForOutput :: Int -> Program -> Maybe ProgramOutput
 findInputsForOutput output prog | null searchResult = Nothing
