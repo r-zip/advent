@@ -10,6 +10,16 @@ import           System.IO                      ( FilePath
 
 data Program = Run [Int] | Halt [Int] deriving (Show, Eq)
 
+everyNth :: Int -> [a] -> [a]
+everyNth n xs = case drop (n-1) xs of
+                  (y:ys) -> y : everyNth n ys
+                  [] -> []
+
+makeProgram :: [Int] -> Program
+makeProgram prog
+  | 99 `notElem` everyNth 4 (tail prog) = Halt prog  -- no end opcode
+  | otherwise = Run prog
+
 toInts :: Program -> [Int]
 toInts (Run  p) = p
 toInts (Halt p) = p
@@ -25,6 +35,7 @@ getOperation _ =
   error
     "Undefined operation. Valid operations are 1 (addition) and 2 (multiplication)"
 
+-- TODO: instead of checking length here, add length field to program datatype
 readRegister :: Int -> [Int] -> Int
 readRegister n prog
   | n >= length prog = error "Program is not long enough to read instruction."
