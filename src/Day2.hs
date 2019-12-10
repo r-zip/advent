@@ -21,7 +21,9 @@ readProgramFromFile f =
 getOperation :: (Num a, Eq a) => Int -> (a -> a -> a)
 getOperation 1 = (+)
 getOperation 2 = (*)
-getOperation _ = undefined
+getOperation _ =
+  error
+    "Undefined operation. Valid operations are 1 (addition) and 2 (multiplication)"
 
 readRegister :: Int -> [Int] -> Int
 readRegister n prog
