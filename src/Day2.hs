@@ -8,6 +8,7 @@ import           System.IO                      ( FilePath
                                                 )
 
 
+-- TODO: should have statuses for not yet run, executed successfully, failed
 data ExecStatus = Run | Halt deriving (Eq, Show)
 
 data Program =
