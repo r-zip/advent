@@ -10,6 +10,10 @@ import           System.IO                      ( FilePath
 
 data Program = Run [Int] | Halt [Int] deriving (Show, Eq)
 
+toInts :: Program -> [Int]
+toInts (Run  p) = p
+toInts (Halt p) = p
+
 readProgramFromFile :: FilePath -> IO Program
 readProgramFromFile f =
   Run . map (read . T.unpack) . T.splitOn (T.pack ",") . T.pack <$> readFile f
@@ -59,12 +63,33 @@ runProgram prog          = go 0 prog where
   go n halt@(Halt _) = halt
   go n run@( Run  _) = go (n + 1) $ executeInstruction n run
 
-restoreProgramAlarmState :: Program -> Program
-restoreProgramAlarmState (Run prog) =
-  Run $ take 1 prog ++ [12, 2] ++ drop 3 prog
-restoreProgramAlarmState (Halt prog) =
-  Run $ take 1 prog ++ [12, 2] ++ drop 3 prog
+setNounAndVerb :: Int -> Int -> Program -> Program
+setNounAndVerb _ _ halt@(Halt prog) = halt
+setNounAndVerb noun verb (Run prog) =
+  Run $ take 1 prog ++ [noun, verb] ++ drop 3 prog
 
-output =
-  runProgram . restoreProgramAlarmState <$> readProgramFromFile "data/day2.txt"
+partOneOutput =
+  runProgram . setNounAndVerb 12 2 <$> readProgramFromFile "data/day2.txt"
 
+data ProgramOutput = ProgramOutput
+  { output :: Int
+  , noun :: Int
+  , verb :: Int
+  } deriving Show
+
+runProgramForInputs :: Int -> Int -> Program -> ProgramOutput
+runProgramForInputs noun verb prog = ProgramOutput output noun verb where
+  output = readRegister 0 $ toInts $ runProgram (setNounAndVerb noun verb prog)
+
+findInputsForOutput :: Int -> Program -> Maybe ProgramOutput
+findInputsForOutput output prog | null searchResult = Nothing
+                                | otherwise         = Just $ head searchResult
+ where
+  searchResult = dropWhile
+    (not . outputsMatch)
+    [ runProgramForInputs n v prog | n <- [0 .. 99], v <- [0 .. 99] ]
+  outputsMatch :: ProgramOutput -> Bool
+  outputsMatch ProgramOutput { output = o } = o == output
+
+partTwoOutput =
+  findInputsForOutput 19690720 <$> readProgramFromFile "data/day2.txt"
