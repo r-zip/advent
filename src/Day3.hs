@@ -80,5 +80,22 @@ extremumForAxisAndPath ax extremum path = sum $ filter filterFunc distancesInDir
                  High -> (> 0)
                  Low -> (< 0)
 
--- getGridBoundsForPath :: WirePath -> (Int, Int, Int, Int)
--- getGridBoundsForPath path = 
+extremumForAxis :: Axis -> Extremum -> WirePaths -> Int
+extremumForAxis ax extremum = maximum . map (extremumForAxisAndPath ax extremum)
+
+data GridSize = GridSize
+  { gXMin :: Int
+  , gYMin :: Int
+  , gXMax :: Int
+  , gYMax :: Int
+  } deriving (Eq, Show)
+
+gridSize :: WirePaths -> GridSize
+gridSize wps = GridSize xmin ymin xmax ymax where
+  xmin = extremumForAxis XAxis Low wps
+  ymin = extremumForAxis YAxis Low wps
+  xmax = extremumForAxis XAxis High wps
+  ymax = extremumForAxis YAxis High wps
+
+
+
