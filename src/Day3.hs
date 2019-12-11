@@ -2,9 +2,7 @@
 module Day3 where
 
 import qualified Data.Text                     as T
-import qualified Data.Array                    as A
 import           System.IO                      ( FilePath )
-import           Data.List                      ( intersect )
 import           Data.Set                       ( fromList, intersection, toList )
 
 data Direction = U | D | L | R | InvalidDirection deriving (Show, Eq)
