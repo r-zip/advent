@@ -1,8 +1,8 @@
 module Day2 where
 
+import           Data.List.Split                ( chunksOf )
 import qualified Data.Text                     as T
 import qualified Data.Text.IO                  as TIO
-import           Data.List.Split                ( chunksOf )
 import           System.IO                      ( FilePath
                                                 , openFile
                                                 )
@@ -65,37 +65,39 @@ writeRegister n result prog =
   where progContents = pContents prog
 
 executeInstruction :: Int -> Program -> Program
-executeInstruction _ halt@(Program _ _ Halt) = halt
-executeInstruction n run@(Program len prog Run)
-  | op == 99  = Program len prog Halt
-  | otherwise = writeRegister dest result run
+executeInstruction n prog@(Program len progContents execStatus)
+  | execStatus == Halt = prog
+  | op == 99           = Program len progContents Halt
+  | otherwise          = writeRegister dest result prog
  where
-  op     = readOperation n run
-  dest   = readDest n run
+  op     = readOperation n prog
+  dest   = readDest n prog
   result = f arg1 arg2
-  f      = getOperation (readOperation n run)
-  arg1   = readRegister (readSrc1 n run) run
-  arg2   = readRegister (readSrc2 n run) run
+  f      = getOperation (readOperation n prog)
+  arg1   = readRegister (readSrc1 n prog) prog
+  arg2   = readRegister (readSrc2 n prog) prog
 
 runProgram :: Program -> Program
-runProgram halt@(Program _ _ Halt) = halt
-runProgram prog                    = go 0 prog where
+runProgram = go 0 where
   go :: Int -> Program -> Program
-  go n halt@(Program _ _ Halt) = halt
-  go n run@( Program _ _ Run ) = go (n + 1) $ executeInstruction n run
+  go n prog | pExecStatus prog == Halt = prog
+            | otherwise                = go (n + 1) $ executeInstruction n prog
 
 setNounAndVerb :: Int -> Int -> Program -> Program
-setNounAndVerb _ _ halt@(Program _ _ Halt) = halt
-setNounAndVerb noun verb (Program _ prog Run) =
-  makeProgram $ take 1 prog ++ [noun, verb] ++ drop 3 prog
+setNounAndVerb noun verb prog
+  | pExecStatus prog == Halt
+  = prog
+  | otherwise
+  = makeProgram $ take 1 progContents ++ [noun, verb] ++ drop 3 progContents
+  where progContents = pContents prog
 
 partOneOutput =
   runProgram . setNounAndVerb 12 2 <$> readProgramFromFile "data/day2.txt"
 
 data ProgramOutput = ProgramOutput
   { output :: Int
-  , noun :: Int
-  , verb :: Int
+  , noun   :: Int
+  , verb   :: Int
   } deriving Show
 
 runProgramForInputs :: Int -> Int -> Program -> ProgramOutput

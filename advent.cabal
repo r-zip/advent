@@ -39,6 +39,8 @@ library
                 base >=4.7 && <5
                 , text >= 1.2.3.1
                 , split
+                , containers
+                , array
   default-language: Haskell2010
 
 executable advent-exe
@@ -53,6 +55,8 @@ executable advent-exe
                 , base >=4.7 && <5
                 , text >= 1.2.3.1
                 , split
+                , containers
+                , array
   default-language: Haskell2010
 
 test-suite advent-test
@@ -68,4 +72,6 @@ test-suite advent-test
                 , base >=4.7 && <5
                 , text >= 1.2.3.1
                 , split
+                , containers
+                , array
   default-language: Haskell2010
