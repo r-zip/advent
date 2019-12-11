@@ -14,6 +14,10 @@ copyright: 2019 Author name here
 maintainer: example@example.com
 dependencies:
 - split
+- containers
+- extra
+- array
+- text
 - base >= 4.7 && < 5
 name: advent
 version: 0.1.0.0

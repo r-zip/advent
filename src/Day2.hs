@@ -8,7 +8,6 @@ import           System.IO                      ( FilePath
                                                 )
 
 
--- TODO: should have statuses for not yet run, executed successfully, failed
 data ExecStatus = Run | Halt deriving (Eq, Show)
 
 data Program =
@@ -47,17 +46,20 @@ readRegister n prog
   | n >= pLength prog = error "Program is not long enough to read instruction."
   | otherwise         = pContents prog !! n
 
-readOperation :: Int -> Program -> Int
-readOperation n = readRegister (n * 4)
+makeReadFunction :: Int -> Int -> Program -> Int
+makeReadFunction offset n = readRegister (n * 4 + offset)
+
+readOpcode :: Int -> Program -> Int
+readOpcode = makeReadFunction 0
 
 readSrc1 :: Int -> Program -> Int
-readSrc1 n = readRegister (n * 4 + 1)
+readSrc1 = makeReadFunction 1
 
 readSrc2 :: Int -> Program -> Int
-readSrc2 n = readRegister (n * 4 + 2)
+readSrc2 = makeReadFunction 2
 
 readDest :: Int -> Program -> Int
-readDest n = readRegister (n * 4 + 3)
+readDest = makeReadFunction 3
 
 writeRegister :: Int -> Int -> Program -> Program
 writeRegister n result prog =
@@ -70,10 +72,10 @@ executeInstruction n prog@(Program len progContents execStatus)
   | op == 99           = Program len progContents Halt
   | otherwise          = writeRegister dest result prog
  where
-  op     = readOperation n prog
+  op     = readOpcode n prog
   dest   = readDest n prog
   result = f arg1 arg2
-  f      = getOperation (readOperation n prog)
+  f      = getOperation (readOpcode n prog)
   arg1   = readRegister (readSrc1 n prog) prog
   arg2   = readRegister (readSrc2 n prog) prog
 

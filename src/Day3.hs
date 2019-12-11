@@ -2,23 +2,15 @@
 module Day3 where
 
 import qualified Data.Text                     as T
-import qualified Data.Map                      as M
 import qualified Data.Array                    as A
 import           System.IO                      ( FilePath )
+import           Data.List                      ( intersect )
+import           Data.Set                       ( fromList, intersection, toList )
 
 data Direction = U | D | L | R | InvalidDirection deriving (Show, Eq)
-data Distance = Distance Int | InvalidDistance deriving (Show, Eq, Ord)
 
-makeDistance :: T.Text -> Distance
-makeDistance s | dist < 0  = InvalidDistance
-               | otherwise = Distance dist
- where
-  dist :: Int
-  dist = read $ T.unpack s
-
-toInt :: Distance -> Int
-toInt InvalidDistance = 0
-toInt (Distance x)    = x
+makeDistance :: T.Text -> Int
+makeDistance = read . T.unpack
 
 toDirection :: T.Text -> Direction
 toDirection "U" = U
@@ -29,7 +21,7 @@ toDirection _   = InvalidDirection
 
 data WirePathComponent = InvalidWirePathComponent | WirePathComponent
   { wpDirection :: Direction
-  , wpDistance :: Distance
+  , wpDistance :: Int
   } deriving (Show, Eq)
 
 type WirePath = [WirePathComponent]
@@ -38,7 +30,6 @@ type WirePaths = [WirePath]
 parseWirePathComponent :: T.Text -> WirePathComponent
 parseWirePathComponent s
   | dir == InvalidDirection = InvalidWirePathComponent
-  | dist == InvalidDistance = InvalidWirePathComponent
   | otherwise = WirePathComponent { wpDirection = dir, wpDistance = dist }
  where
   dir  = toDirection $ T.take 1 s
@@ -54,60 +45,25 @@ parseWirePaths directions =
 readWirePathsFromFile :: FilePath -> IO WirePaths
 readWirePathsFromFile filePath = parseWirePaths . T.pack <$> readFile filePath
 
-data Extremum = Low | High deriving (Show, Eq)
+coordinates :: WirePath -> [(Int, Int)]
+coordinates = go [(0, 0)] where
+  go coords [] = tail $ reverse coords
+  go coords (wpc : wpcs) =
+    go (reverse (addToCoordinates wpc (head coords)) ++ coords) wpcs
+  addToCoordinates WirePathComponent { wpDirection = dir, wpDistance = dist } (x, y)
+    = case dir of
+      U -> [ (x, y + k) | k <- [1 .. dist] ]
+      D -> [ (x, y - k) | k <- [1 .. dist] ]
+      L -> [ (x - k, y) | k <- [1 .. dist] ]
+      R -> [ (x + k, y) | k <- [1 .. dist] ]
 
-data Axis = XAxis | YAxis deriving (Show, Eq)
+intersections :: WirePaths -> [(Int, Int)]
+intersections []         = []
+intersections [wp1, wp2] = toList $ fromList (coordinates wp1) `intersection` fromList (coordinates wp2)
 
-signedMagnitude :: WirePathComponent -> Int
-signedMagnitude wpComponent
-  | wpDirection wpComponent == InvalidDirection = error
-    "InvalidDirection passed to sign."
-  | wpDirection wpComponent == U = 1 * magnitude
-  | wpDirection wpComponent == D = -1 * magnitude
-  | wpDirection wpComponent == L = -1 * magnitude
-  | wpDirection wpComponent == R = 1 * magnitude
-  where magnitude = toInt $ wpDistance wpComponent
+distanceToNearestIntersection :: [(Int, Int)] -> Int
+distanceToNearestIntersection =
+  minimum . filter (/= 0) . map (\(x, y) -> abs x + abs y)
 
-axis :: Direction -> Axis
-axis InvalidDirection = error "InvalidDirection passed to axis."
-axis U                = YAxis
-axis D                = YAxis
-axis L                = XAxis
-axis R                = XAxis
-
-extremumForAxisAndPath :: Axis -> Extremum -> WirePath -> Int
-extremumForAxisAndPath ax extremum path = sum
-  $ filter filterFunc distancesInDirection where
-  distancesInDirection =
-    map signedMagnitude $ filter ((== ax) . axis . wpDirection) path
-  filterFunc = case extremum of
-    High -> (> 0)
-    Low  -> (< 0)
-
-extremumForAxis :: Axis -> Extremum -> WirePaths -> Int
-extremumForAxis ax extremum =
-  maximum . map (extremumForAxisAndPath ax extremum)
-
-data GridSize = GridSize
-  { gXMin :: Int
-  , gYMin :: Int
-  , gXMax :: Int
-  , gYMax :: Int
-  } deriving (Eq, Show)
-
-gridSize :: WirePaths -> GridSize
-gridSize wps = GridSize xmin ymin xmax ymax where
-  xmin = extremumForAxis XAxis Low wps
-  ymin = extremumForAxis YAxis Low wps
-  xmax = extremumForAxis XAxis High wps
-  ymax = extremumForAxis YAxis High wps
-
-
-
-
-
-
-
-
-
-
+partOneOutput :: IO Int
+partOneOutput = distanceToNearestIntersection . intersections <$> readWirePathsFromFile "data/day3.txt"
