@@ -1,9 +1,24 @@
 {-# LANGUAGE OverloadedStrings #-}
-module Day3 where
+module Day3
+where
 
+import qualified Data.Map                      as M
 import qualified Data.Text                     as T
 import           System.IO                      ( FilePath )
-import           Data.Set                       ( fromList, intersection, toList )
+import           Data.Set                       ( fromList
+                                                , intersection
+                                                , toList
+                                                )
+import           Data.List                      ( nub
+                                                , find
+                                                )
+import           Data.List.Extra                ( minimumOn )
+import           Data.Tuple.Extra               ( fst3, snd3, thd3 )
+import           Data.Hashable                  ( Hashable
+                                                , hash
+                                                , hashWithSalt
+                                                )
+import Control.Monad (liftM)
 
 data Direction = U | D | L | R | InvalidDirection deriving (Show, Eq)
 
@@ -43,25 +58,44 @@ parseWirePaths directions =
 readWirePathsFromFile :: FilePath -> IO WirePaths
 readWirePathsFromFile filePath = parseWirePaths . T.pack <$> readFile filePath
 
-coordinates :: WirePath -> [(Int, Int)]
-coordinates = go [(0, 0)] where
+generateWirePath :: WirePathComponent -> (Int, Int) -> [(Int, Int)]
+generateWirePath WirePathComponent { wpDirection = dir, wpDistance = dist } (x, y)
+  = case dir of
+    U -> [ (x, y + k) | k <- [1 .. dist] ]
+    D -> [ (x, y - k) | k <- [1 .. dist] ]
+    L -> [ (x - k, y) | k <- [1 .. dist] ]
+    R -> [ (x + k, y) | k <- [1 .. dist] ]
+
+generateWirePathWithDistances
+  :: WirePathComponent -> (Int, Int, Int) -> [(Int, Int, Int)]
+generateWirePathWithDistances WirePathComponent { wpDirection = dir, wpDistance = dist } (x, y, d)
+  = case dir of
+    U -> [ (x, y + k, d + k) | k <- [1 .. dist] ]
+    D -> [ (x, y - k, d + k) | k <- [1 .. dist] ]
+    L -> [ (x - k, y, d + k) | k <- [1 .. dist] ]
+    R -> [ (x + k, y, d + k) | k <- [1 .. dist] ]
+
+coordinates :: WirePath -> [(Int, Int, Int)]
+coordinates = go [(0, 0, 0)] where
   go coords [] = tail $ reverse coords
   go coords (wpc : wpcs) =
-    go (reverse (addToCoordinates wpc (head coords)) ++ coords) wpcs
-  addToCoordinates WirePathComponent { wpDirection = dir, wpDistance = dist } (x, y)
-    = case dir of
-      U -> [ (x, y + k) | k <- [1 .. dist] ]
-      D -> [ (x, y - k) | k <- [1 .. dist] ]
-      L -> [ (x - k, y) | k <- [1 .. dist] ]
-      R -> [ (x + k, y) | k <- [1 .. dist] ]
+    go (reverse (generateWirePathWithDistances wpc (head coords)) ++ coords) wpcs
 
-intersections :: WirePaths -> [(Int, Int)]
-intersections []         = []
-intersections [wp1, wp2] = toList $ fromList (coordinates wp1) `intersection` fromList (coordinates wp2)
+cToXYD :: (Int, Int, Int) -> ((Int, Int), Int)
+cToXYD c = ((fst3 c, snd3 c), thd3 c)
 
-distanceToNearestIntersection :: [(Int, Int)] -> Int
-distanceToNearestIntersection =
-  minimum . filter (/= 0) . map (\(x, y) -> abs x + abs y)
+coordMap :: [((Int, Int), Int)] -> M.Map (Int, Int) Int
+coordMap = M.fromListWith min
 
-partOneOutput :: IO Int
-partOneOutput = distanceToNearestIntersection . intersections <$> readWirePathsFromFile "data/day3.txt"
+coordMaps :: WirePaths -> [M.Map (Int, Int) Int]
+coordMaps = map (M.fromListWith min . map cToXYD . coordinates)
+
+minDistance :: ((Int, Int), Int) -> ((Int, Int), Int) -> ((Int, Int), Int)
+minDistance x y = if snd x <= snd y then x else y
+
+day3PartTwoOutput = foldl1 minDistance . M.toList <$> coordIntersection where
+  coordIntersection = M.intersectionWith (+) <$> firstMap <*> secondMap
+  wirePaths = readWirePathsFromFile "data/day3.txt"
+  maps = coordMaps <$> wirePaths
+  firstMap = head <$> maps
+  secondMap = head . tail <$> maps

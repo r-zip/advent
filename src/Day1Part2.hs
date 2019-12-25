@@ -1,4 +1,6 @@
-module Day1Part2 where
+module Day1Part2 (
+  totalFuelRequirement
+  ) where
 
 import           Day1Part1                      ( moduleFuelRequirement
                                                 , moduleMasses

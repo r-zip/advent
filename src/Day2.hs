@@ -1,4 +1,7 @@
-module Day2 where
+module Day2 (
+  day2PartOneOutput,
+  day2PartTwoOutput
+  )where
 
 import           Data.List.Split                ( chunksOf )
 import qualified Data.Text                     as T
@@ -93,7 +96,7 @@ setNounAndVerb noun verb prog
   = makeProgram $ take 1 progContents ++ [noun, verb] ++ drop 3 progContents
   where progContents = pContents prog
 
-partOneOutput =
+day2PartOneOutput =
   runProgram . setNounAndVerb 12 2 <$> readProgramFromFile "data/day2.txt"
 
 data ProgramOutput = ProgramOutput
@@ -116,5 +119,5 @@ findInputsForOutput output prog | null searchResult = Nothing
   outputsMatch :: ProgramOutput -> Bool
   outputsMatch ProgramOutput { output = o } = o == output
 
-partTwoOutput =
+day2PartTwoOutput =
   findInputsForOutput 19690720 <$> readProgramFromFile "data/day2.txt"
