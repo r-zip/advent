@@ -1,7 +1,8 @@
-module Day2 (
-  day2PartOneOutput,
-  day2PartTwoOutput
-  )where
+module Day2
+  ( day2PartOneOutput
+  , day2PartTwoOutput
+  )
+where
 
 import           Data.List.Split                ( chunksOf )
 import qualified Data.Text                     as T
@@ -121,3 +122,4 @@ findInputsForOutput output prog | null searchResult = Nothing
 
 day2PartTwoOutput =
   findInputsForOutput 19690720 <$> readProgramFromFile "data/day2.txt"
+
