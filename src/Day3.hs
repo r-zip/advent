@@ -1,6 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
-module Day3
-where
+module Day3 where
 
 import qualified Data.Map                      as M
 import qualified Data.Text                     as T
@@ -13,12 +12,15 @@ import           Data.List                      ( nub
                                                 , find
                                                 )
 import           Data.List.Extra                ( minimumOn )
-import           Data.Tuple.Extra               ( fst3, snd3, thd3 )
+import           Data.Tuple.Extra               ( fst3
+                                                , snd3
+                                                , thd3
+                                                )
 import           Data.Hashable                  ( Hashable
                                                 , hash
                                                 , hashWithSalt
                                                 )
-import Control.Monad (liftM)
+import           Control.Monad                  ( liftM )
 
 data Direction = U | D | L | R | InvalidDirection deriving (Show, Eq)
 
@@ -77,9 +79,10 @@ generateWirePathWithDistances WirePathComponent { wpDirection = dir, wpDistance 
 
 coordinates :: WirePath -> [(Int, Int, Int)]
 coordinates = go [(0, 0, 0)] where
-  go coords [] = tail $ reverse coords
-  go coords (wpc : wpcs) =
-    go (reverse (generateWirePathWithDistances wpc (head coords)) ++ coords) wpcs
+  go coords []           = tail $ reverse coords
+  go coords (wpc : wpcs) = go
+    (reverse (generateWirePathWithDistances wpc (head coords)) ++ coords)
+    wpcs
 
 cToXYD :: (Int, Int, Int) -> ((Int, Int), Int)
 cToXYD c = ((fst3 c, snd3 c), thd3 c)
@@ -95,7 +98,7 @@ minDistance x y = if snd x <= snd y then x else y
 
 day3PartTwoOutput = foldl1 minDistance . M.toList <$> coordIntersection where
   coordIntersection = M.intersectionWith (+) <$> firstMap <*> secondMap
-  wirePaths = readWirePathsFromFile "data/day3.txt"
-  maps = coordMaps <$> wirePaths
-  firstMap = head <$> maps
-  secondMap = head . tail <$> maps
+  wirePaths         = readWirePathsFromFile "data/day3.txt"
+  maps              = coordMaps <$> wirePaths
+  firstMap          = head <$> maps
+  secondMap         = head . tail <$> maps
