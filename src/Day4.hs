@@ -4,28 +4,11 @@ import           Data.List                      ( elemIndices
                                                 , nub
                                                 )
 
-
-
-passwordLength = 6
-
 numToDigit :: Int -> Int -> Int
 numToDigit place value = 10 ^ place * value
 
 fromDigits :: [Int] -> Int
 fromDigits xs = sum (zipWith numToDigit [0 .. length xs - 1] (reverse xs))
-
-toDigits :: Int -> [Int]
-toDigits 0 = [0]
-toDigits n = reverse $ go n k []    where
-        go :: Int -> Int -> [Int] -> [Int]
-        go p 0 res = p : res
-        go p q res = go (p - quot * 10 ^ q) (q - 1) (quot : res)
-                where quot = p `div` 10 ^ q
-        quotient = n `div` 10 ^ k
-        k        = floor $ logBase 10 $ fromIntegral n
-
-
-combinations n = [ [x, y] | x <- [n .. 9], y <- [x .. 9] ]
 
 passwords =
         [ [n1, n2, n3, n4, n5, n6]
@@ -52,14 +35,6 @@ day4PartOneOutput = length day4PartOnePasswords
 repeatedDigit :: [Int] -> Bool
 repeatedDigit [] = False
 repeatedDigit xs = or $ zipWith (==) (init xs) (tail xs)
-
-threeOrMoreRepeatedDigits :: [Int] -> Bool
-threeOrMoreRepeatedDigits [] = False
-threeOrMoreRepeatedDigits xs
-        | length xs >= 3 = or
-        $ zipWith3 allEqual (init xs) (tail xs) (tail (tail xs))
-        | otherwise = False
-        where allEqual x y z = x == y && y == z
 
 maxRunLength :: Int -> [Int] -> Int
 maxRunLength x [] = 0
