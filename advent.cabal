@@ -4,16 +4,16 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: f8df068fef25f07a5ec1a4cd884730f01f09c1c4b43f8f9dec1efb5c8849e91e
+-- hash: 90a9c03057180ec35856433b4a74cff2634e1e5bbde51483b199fe2befc1376b
 
 name:           advent
 version:        0.1.0.0
-description:    Please see the README on GitHub at <https://github.com/githubuser/advent#readme>
-homepage:       https://github.com/githubuser/advent#readme
-bug-reports:    https://github.com/githubuser/advent/issues
-author:         Author name here
-maintainer:     example@example.com
-copyright:      2019 Author name here
+description:    Please see the README on GitHub at <https://github.com/r-zip/advent#readme>
+homepage:       https://github.com/r-zip/advent#readme
+bug-reports:    https://github.com/r-zip/advent/issues
+author:         Ryan Pilgrim
+maintainer:     ryan.z.pilgrim@gmail.com
+copyright:      2019 Ryan Pilgrim
 license:        BSD3
 license-file:   LICENSE
 build-type:     Simple
@@ -23,7 +23,7 @@ extra-source-files:
 
 source-repository head
   type: git
-  location: https://github.com/githubuser/advent
+  location: https://github.com/r-zip/advent
 
 library
   exposed-modules:
@@ -32,6 +32,11 @@ library
       Day2
       Day3
       Day4
+      Day4_103530756181914_flymake
+      Day4_103532281257446_flymake
+      Day4_103549327950815_flymake
+      Day4_103549975948782_flymake
+      Day4_103752265657010_flymake
       Day5
       Lib
   other-modules:
@@ -44,6 +49,7 @@ library
     , containers
     , extra
     , hashable
+    , megaparsec
     , split
     , text
     , unordered-containers
@@ -63,6 +69,7 @@ executable advent-exe
     , containers
     , extra
     , hashable
+    , megaparsec
     , split
     , text
     , unordered-containers
@@ -83,6 +90,7 @@ test-suite advent-test
     , containers
     , extra
     , hashable
+    , megaparsec
     , split
     , text
     , unordered-containers

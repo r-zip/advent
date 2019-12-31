@@ -1,6 +1,16 @@
 module Day5 where
 
-import           Day2
+import Text.ParserCombinators.ReadP
 
 
--- now would be a good time to look into parsers
+isVowel :: Char -> Bool
+isVowel char = char `elem` "aeiou"
+
+vowel :: ReadP Char
+vowel = satisfy isVowel
+
+atLeastOneVowel :: ReadP String
+atLeastOneVowel = many1 vowel
+
+foo = readP_to_S atLeastOneVowel "aouibcdef"
+

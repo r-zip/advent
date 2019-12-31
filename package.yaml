@@ -10,8 +10,8 @@ tests:
     - -with-rtsopts=-N
     dependencies:
     - advent
-copyright: 2019 Author name here
-maintainer: example@example.com
+copyright: 2019 Ryan Pilgrim
+maintainer: ryan.z.pilgrim@gmail.com
 dependencies:
 - split
 - containers
@@ -20,14 +20,15 @@ dependencies:
 - extra
 - array
 - text
+- megaparsec
 - base >= 4.7 && < 5
 name: advent
 version: 0.1.0.0
 extra-source-files:
 - README.md
 - ChangeLog.md
-author: Author name here
-github: githubuser/advent
+author: Ryan Pilgrim
+github: r-zip/advent
 license: BSD3
 executables:
   advent-exe:
@@ -39,4 +40,4 @@ executables:
     - -with-rtsopts=-N
     dependencies:
     - advent
-description: Please see the README on GitHub at <https://github.com/githubuser/advent#readme>
+description: Please see the README on GitHub at <https://github.com/r-zip/advent#readme>
